@@ -16,6 +16,8 @@
 
 package jackpal.androidterm;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -26,6 +28,7 @@ import android.net.Uri;
 import android.os.*;
 import android.content.Intent;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.app.Notification;
@@ -42,6 +45,8 @@ import java.util.UUID;
 
 public class TermService extends Service implements TermSession.FinishCallback
 {
+    private static final String CHANNEL_ID = "main_notification_id";
+
     /* Parallels the value of START_STICKY on API Level >= 5 */
     private static final int COMPAT_START_STICKY = 1;
 
@@ -64,7 +69,7 @@ public class TermService extends Service implements TermSession.FinishCallback
 
     /* This should be @Override if building with API Level >=5 */
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return COMPAT_START_STICKY;
+        return  START_STICKY_COMPATIBILITY;
     }
 
     @Override
@@ -94,13 +99,18 @@ public class TermService extends Service implements TermSession.FinishCallback
         mTermSessions = new SessionList();
 
         /* Put the service in the foreground. */
-        Notification notification = new Notification(R.drawable.ic_stat_service_notification_icon, getText(R.string.service_notify_text), System.currentTimeMillis());
-        notification.flags |= Notification.FLAG_ONGOING_EVENT;
+        createNotificationChannel();
         Intent notifyIntent = new Intent(this, Term.class);
         notifyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, 0);
-        notification.setLatestEventInfo(this, getText(R.string.application_terminal), getText(R.string.service_notify_text), pendingIntent);
-        compat.startForeground(RUNNING_NOTIFICATION, notification);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                    notifyIntent, 0);
+        Notification notification =
+                new NotificationCompat.Builder(this, CHANNEL_ID)
+                        .setContentTitle(getText(R.string.service_notify_text))
+                        .setSmallIcon(R.drawable.ic_stat_service_notification_icon)
+                        .setContentIntent(pendingIntent)
+                        .build();
+        startForeground(RUNNING_NOTIFICATION, notification);
 
         Log.d(TermDebug.LOG_TAG, "TermService started");
         return;
@@ -118,6 +128,16 @@ public class TermService extends Service implements TermSession.FinishCallback
         }
         mTermSessions.clear();
         return;
+    }
+
+    private void createNotificationChannel() {
+        CharSequence name = "Something.";
+        int importance = NotificationManager.IMPORTANCE_DEFAULT;
+        NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+        // Register the channel with the system; you can't change the importance
+        // or other notification behaviors after this
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
     }
 
     public SessionList getSessions() {
