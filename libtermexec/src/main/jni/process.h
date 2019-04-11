@@ -22,8 +22,15 @@
 #include <android/log.h>
 
 #define LOG_TAG "jackpal-termexec"
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
-extern "C" {
+#if __cplusplus < 201103L
+ typedef unsigned short char16_t;
+ typedef unsigned char32_t;
+#endif
+
 JNIEXPORT jint JNICALL Java_jackpal_androidterm_TermExec_createSubprocessInternal
       (JNIEnv *, jclass, jstring, jobjectArray, jobjectArray, jint);
 
