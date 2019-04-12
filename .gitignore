@@ -9,6 +9,10 @@
 # Java class files
 *.class
 
+# Object files
+*.o
+*.o.d
+
 # Generated files
 bin/
 gen/
@@ -55,6 +59,8 @@ captures/
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
+.cxx
+debug
 
 # Google Services (e.g. APIs or Firebase)
 # google-services.json
