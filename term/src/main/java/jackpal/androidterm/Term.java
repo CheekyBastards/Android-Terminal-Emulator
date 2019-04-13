@@ -16,6 +16,7 @@
 
 package jackpal.androidterm;
 
+import android.annotation.SuppressLint;
 import android.text.TextUtils;
 import jackpal.androidterm.compat.ActionBarCompat;
 import jackpal.androidterm.compat.ActivityCompat;
@@ -133,7 +134,7 @@ public class Term extends Activity implements UpdateCallback, SharedPreferences.
             }
             mPendingPathBroadcasts--;
 
-            if (mPendingPathBroadcasts <= 0 && mTermService != null) {
+            if ((mPendingPathBroadcasts <= 0) && (mTermService != null)) {
                 populateViewFlipper();
                 populateWindowList();
             }
@@ -178,6 +179,7 @@ public class Term extends Activity implements UpdateCallback, SharedPreferences.
         }
 
         @Override
+        @SuppressLint("StringFormatInvalid")
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView label = new TextView(Term.this);
             String title = getSessionTitle(position, getString(R.string.window_title, position + 1));
@@ -311,7 +313,7 @@ public class Term extends Activity implements UpdateCallback, SharedPreferences.
          * Make sure the back button always leaves the application.
          */
         private boolean backkeyInterceptor(int keyCode, KeyEvent event) {
-            if (keyCode == KeyEvent.KEYCODE_BACK && mActionBarMode == TermSettings.ACTION_BAR_MODE_HIDES && mActionBar != null && mActionBar.isShowing()) {
+            if ((keyCode == KeyEvent.KEYCODE_BACK) && (mActionBarMode == TermSettings.ACTION_BAR_MODE_HIDES) && (mActionBar != null) && mActionBar.isShowing()) {
                 /* We need to intercept the key event before the view sees it,
                    otherwise the view will handle it before we get it */
                 onKeyUp(keyCode, event);
@@ -375,7 +377,6 @@ public class Term extends Activity implements UpdateCallback, SharedPreferences.
         mViewFlipper = (TermViewFlipper) findViewById(VIEW_FLIPPER);
 
         PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TermDebug.LOG_TAG);
         WifiManager wm = (WifiManager)getSystemService(Context.WIFI_SERVICE);
         int wifiLockMode = WifiManager.WIFI_MODE_FULL;
         if (AndroidCompat.SDK >= 12) {
@@ -383,6 +384,8 @@ public class Term extends Activity implements UpdateCallback, SharedPreferences.
         }
         mWifiLock = wm.createWifiLock(wifiLockMode, TermDebug.LOG_TAG);
 
+        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                "TermDebug::WakeLock");
         ActionBarCompat actionBar = ActivityCompat.getActionBar(this);
         if (actionBar != null) {
             mActionBar = actionBar;

@@ -17,23 +17,26 @@
 package jackpal.androidterm;
 
 import android.app.NotificationChannel;
+ import android.app.ActivityOptions;
 import android.app.NotificationManager;
 import android.app.Service;
+ import android.content.Context;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+ import android.graphics.Rect;
 import android.net.Uri;
 import android.os.*;
 import android.content.Intent;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.app.Notification;
 import android.app.PendingIntent;
 
+import androidx.core.app.NotificationCompat;
 import jackpal.androidterm.emulatorview.TermSession;
 
 import jackpal.androidterm.compat.ServiceForegroundCompat;
@@ -49,6 +52,7 @@ public class TermService extends Service implements TermSession.FinishCallback
 
     /* Parallels the value of START_STICKY on API Level >= 5 */
     private static final int COMPAT_START_STICKY = 1;
+     private static final String KEY_TEXT_REPLY = "key_text_reply";
 
     private static final int RUNNING_NOTIFICATION = 1;
     private ServiceForegroundCompat compat;
@@ -68,6 +72,7 @@ public class TermService extends Service implements TermSession.FinishCallback
     }
 
     /* This should be @Override if building with API Level >=5 */
+     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return  START_STICKY_COMPATIBILITY;
     }
@@ -93,7 +98,7 @@ public class TermService extends Service implements TermSession.FinishCallback
         String defValue = getDir("HOME", MODE_PRIVATE).getAbsolutePath();
         String homePath = prefs.getString("home_path", defValue);
         editor.putString("home_path", homePath);
-        editor.commit();
+         editor.apply();
 
         compat = new ServiceForegroundCompat(this);
         mTermSessions = new SessionList();
@@ -101,6 +106,7 @@ public class TermService extends Service implements TermSession.FinishCallback
         /* Put the service in the foreground. */
         createNotificationChannel();
         Intent notifyIntent = new Intent(this, Term.class);
+         notifyIntent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         notifyIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
                     notifyIntent, 0);
@@ -198,6 +204,9 @@ public class TermService extends Service implements TermSession.FinishCallback
                                     session.setFinishCallback(new RBinderCleanupCallback(result, callback));
                                     session.setTitle("");
 
+                                 // TODO: handle the situation, when supplied file descriptor does not originate from
+                                 // /dev/ptmx (probably should be implemented by throwing IllegalStateEXception
+                                 // when recognized specific errno values in native Exec methods)
                                     session.initializeEmulator(80, 24);
                                 } catch (Exception whatWentWrong) {
                                     Log.e("TermService", "Failed to bootstrap AIDL session: "
