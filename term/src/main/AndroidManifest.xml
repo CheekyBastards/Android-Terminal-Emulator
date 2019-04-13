@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <permission android:name="jackpal.androidterm.permission.RUN_SCRIPT"
                 android:label="@string/perm_run_script"
                 android:description="@string/permdesc_run_script"
@@ -29,6 +30,7 @@
     <application android:icon="@drawable/ic_launcher"
                 android:label="@string/application_terminal"
                 android:hardwareAccelerated="true"
+                android:extractNativeLibs="true"
                 android:theme="@style/Theme">
         <activity android:name="Term"
                 android:launchMode="singleTask"
